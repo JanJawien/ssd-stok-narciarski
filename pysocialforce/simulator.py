@@ -58,8 +58,6 @@ class Simulator:
             forces.DesiredForce(),
             forces.SocialForce(),
             forces.ObstacleForce(),
-            # forces.PedRepulsiveForce(),
-            # forces.SpaceRepulsiveForce(),
         ]
         group_forces = [
             forces.GroupCoherenceForceAlt(),
@@ -77,7 +75,7 @@ class Simulator:
 
     def compute_forces(self):
         """compute forces"""
-        return sum(map(lambda x: x.get_force(), self.forces))
+        return sum(map(lambda x: x._get_force(), self.forces))
 
     def get_states(self):
         """Expose whole state"""

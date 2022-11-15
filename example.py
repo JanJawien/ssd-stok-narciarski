@@ -18,8 +18,8 @@ if __name__ == "__main__":
     # social groups informoation is represented as lists of indices of the state array
     groups = [[1, 0], [2]]
     # list of linear obstacles given in the form of (x_min, x_max, y_min, y_max)
-    # obs = [[-1, -1, -1, 11], [3, 3, -1, 11]]
-    obs = [[1, 2, 7, 8]]
+    obs = [[-1, -1, -1, 11], [3, 3, -1, 11]]
+    # obs = [[1, 2, 7, 8]]
     # obs = None
     # initiate the simulator,
     s = psf.Simulator(
@@ -33,4 +33,8 @@ if __name__ == "__main__":
 
     with psf.plot.SceneVisualizer(s, "images/exmaple") as sv:
         sv.animate()
-        # sv.plot()
+        sv.plot()
+
+
+
+
