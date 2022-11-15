@@ -53,5 +53,16 @@ factor = 10.0
 sigma = 0.2
 threshold = 3.0
 
+[parallel_downhill_force]
+factor = 1.0
+m = 80.0
+g = 9.81
+
+[kinemaric_friction_force]
+factor = 1.0
+m = 80.0
+g = 9.81
+mu = 0.03 #  constant coefficient of the dynamic friction for snow
+
 [along_wall_force]
 

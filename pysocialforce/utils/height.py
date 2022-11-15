@@ -10,7 +10,6 @@ def height(x: float, y: float):
     return (np.sin(x)-2*x)/10 + np.sin(x/10)
 
 
-
 def calculate_grad(x: float, y: float, r: float = 0.001):
     """Calculates and returns the gradient vector of height() function in point (x, y)"""
     prox = np.zeros([2, 2])
@@ -25,7 +24,6 @@ def calculate_grad(x: float, y: float, r: float = 0.001):
     return [grad_x, grad_y]
 
 
-
 def sin_alpha(x: float, y: float, r: float = 0.001):
     """Calculate sinus of alpha angle from height gradient"""
     [grad_x, grad_y] = calculate_grad(x, y, r)
@@ -36,7 +34,6 @@ def sin_alpha(x: float, y: float, r: float = 0.001):
     diff = np.abs(curposh - gradposh)
 
     return diff/dist
-
 
 
 def cos_beta(x: float, y: float, vx: float, vy: float, r: float = 0.001):

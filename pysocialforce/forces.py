@@ -1,9 +1,10 @@
 """Calculate forces for individuals and groups"""
+import math
 import re
 from abc import ABC, abstractmethod
 
 import numpy as np
-from pysocialforce.utils import Config, stateutils, logger
+from pysocialforce.utils import Config, stateutils, logger, height
 
 
 def camel_to_snake(camel_case_string):
@@ -129,6 +130,34 @@ class ObstacleForce(Force):
 
         return force * self.factor
 
+
+class ParallelDownhillForce(Force):
+    '''
+    Calculates the gravity force acting on agent.
+    :return:  the calculated force
+    '''
+    def _get_force(self):
+        m = self.config("m")
+        g = self.config("g")
+        force = np.zeros((self.peds.size(), 2))
+        pos = self.peds.pos()
+
+        for i, p in enumerate(pos):
+            x = self.scene[i][0]
+            y = self.scene[i][1]
+            vx = self.scene[i][2]
+            vy = self.scene[i][3]
+            sin_alpha = height.sin_alpha(x, y)
+            sin_beta = math.sqrt(1 - height.cos_beta(x, y, vx, vy) ** 2)
+            force[i] = m * g * sin_alpha * sin_beta
+
+        return force * self.factor
+
+
+class AirResistanceForce(Force):
+    def _get_force(self):
+
+        force = np.zeros((self.peds.size(), 2))
 
 class GroupCoherenceForceAlt(Force):
     """ Alternative group coherence force as specified in pedsim_ros"""
