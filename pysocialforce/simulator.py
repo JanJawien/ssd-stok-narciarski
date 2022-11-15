@@ -55,9 +55,12 @@ class Simulator:
     def make_forces(self, force_configs):
         """Construct forces"""
         force_list = [
-            forces.DesiredForce(),
-            forces.SocialForce(),
-            forces.ObstacleForce(),
+            forces.DesiredForce(),  # mają jeździć slalomem a nie prosto (w skręcie??????)
+            forces.SocialForce(),   # zmienić koło na elipsę
+            forces.ObstacleForce(), # zmienić koło na elipsę
+            # slope
+            # skręt
+            # opory
         ]
         group_forces = [
             forces.GroupCoherenceForceAlt(),
