@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.linalg as LA
 
 
 def height(x: float, y: float):
@@ -7,3 +8,48 @@ def height(x: float, y: float):
     # Replace with interpolated height matrix in order to simulate real slope
 
     return (np.sin(x)-2*x)/10 + np.sin(x/10)
+
+
+
+def calculate_grad(x: float, y: float, r: float = 0.001):
+    """Calculates and returns the gradient vector of height() function in point (x, y)"""
+    prox = np.zeros([2, 2])
+    prox[0][0] = height(x-r, y-r)
+    prox[0][1] = height(x-r, y+r)
+    prox[1][0] = height(x+r, y-r)
+    prox[1][1] = height(x+r, y+r)
+
+    grad_x = -((prox[1][0] - prox[0][0]) + (prox[1][1] - prox[0][1]))/4
+    grad_y = -((prox[0][1] - prox[0][0]) + (prox[1][1] - prox[1][0]))/4
+
+    return [grad_x, grad_y]
+
+
+
+def sin_alpha(x: float, y: float, r: float = 0.001):
+    """Calculate sinus of alpha angle from height gradient"""
+    [grad_x, grad_y] = calculate_grad(x, y, r)
+
+    curposh = height(x, y)
+    gradposh = height(x+grad_x, y+grad_y)
+    dist = np.sqrt(grad_x**2 + grad_y**2)
+    diff = np.abs(curposh - gradposh)
+
+    return diff/dist
+
+
+
+def cos_beta(x: float, y: float, vx: float, vy: float, r: float = 0.001):
+    """Calculate cos of beta angle from height gradient and agent velocity vector.
+    Return value is always positive (assumes beta e <0deg, 90deg>)"""
+    grad = calculate_grad(x, y, r)
+    horiz = [grad[0], -grad[1]]  # calculate vector perpendicular to gradient
+    vel = [vx, vy] # velocity vector
+
+    inner = np.inner(horiz, vel)
+    norms = LA.norm(horiz) * LA.norm(vel)
+
+    return np.abs(inner / norms)
+
+
+
