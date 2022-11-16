@@ -6,16 +6,20 @@ from datetime import datetime as dt
 
 if __name__ == "__main__":
     # initial states, each entry is the position, velocity and goal of a pedestrian in the form of (px, py, vx, vy, gx, gy)
+    #  x,  y - position
+    # vx, vy - speed vector
+    # gx, gy - goal position (used for DesiredForce - disabled, and stopping fully in scene.step() - commented out)
     initial_state = np.array(
         [
-            [0.5, 0.0, 0.5, 0.0, 0.0, 0.0],
-            [0.0, 0.5, 0.0, 0.5, 0.0, 0.0],
-            [-0.5, 0.0, -0.5, 0.0, 0.0, 0.0],
-            [0.0, -0.5, 0.0, -0.5, 0.0, 0.0],
-            [0.5, 0.5, 0.5, 0.5, 0.0, 0.0],
+        #   [   x     y    vx    vy   gx   gy]
+            [ 0.5,  0.0,  0.5,  0.0, 0.0, 0.0],
+            [ 0.0,  0.5,  0.0,  0.5, 0.0, 0.0],
+            [-0.5,  0.0, -0.5,  0.0, 0.0, 0.0],
+            [ 0.0, -0.5,  0.0, -0.5, 0.0, 0.0],
+            [ 0.5,  0.5,  0.5,  0.5, 0.0, 0.0],
             [-0.5, -0.5, -0.5, -0.5, 0.0, 0.0],
-            [0.5, -0.5, 0.5, -0.5, 0.0, 0.0],
-            [-0.5, 0.5, -0.5, 0.5, 0.0, 0.0]
+            [ 0.5, -0.5,  0.5, -0.5, 0.0, 0.0],
+            [-0.5,  0.5, -0.5,  0.5, 0.0, 0.0],
             # [1.0, 0.0, 0.0, 0.5, 2.0, 10.0],
             # [2.0, 0.0, 0.0, 0.5, 3.0, 10.0],
             # [3.0, 0.0, 0.0, 0.5, 4.0, 10.0],
@@ -40,4 +44,4 @@ if __name__ == "__main__":
 
     with psf.plot.SceneVisualizer(s, "images/exmaple" + dt.now().strftime("%H%M%S")) as sv:
         sv.animate()
-        sv.plot()
+        # sv.plot()

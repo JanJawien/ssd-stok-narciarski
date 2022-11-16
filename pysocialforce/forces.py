@@ -156,15 +156,13 @@ class ParallelDownhillForce(Force):
             vx = ped[2]
             vy = ped[3]
             sin_alpha = height.sin_alpha(x, y)
-            sin_beta = math.sqrt(1 - height.cos_beta(x, y, vx, vy) ** 2)
+            # sin_beta = math.sqrt(1 - height.cos_beta(x, y, vx, vy) ** 2)
+            sin_beta = height.sin_beta(x, y, vx, vy)
 
             f_val = m * g * sin_alpha * sin_beta 
-            # TU JEST COS NIE TAK
-            # SILA POWINNA MIEC ZNAK UJEMNY GDY SIE JEDZIE W GORE STOKU A MA DODATNI
-            # ZMIENILEM SIN_ALPHA TAK ZEBY NIE BYŁO WATOSCI ABSOLUTNEJ I DALEJ NIE DZIAŁA (??????????????????????????)
             v_norm = [vx, vy] / np.linalg.norm([vx, vy])
             force[i] = v_norm*f_val
-            # print()
+            print()
 
         # f.write("\n")
         # f.close()

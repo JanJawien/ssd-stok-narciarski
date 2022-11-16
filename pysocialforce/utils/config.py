@@ -41,7 +41,19 @@ class Config:
     def __call__(self, entry: str, default=None):
         return self.config.get(entry) or default
 
-
+              # EDIT HERE #
+                    #
+                    #
+                    #
+                    #
+                    #
+                    #
+                    #
+                #   #   #
+                 #  #  #
+                  # # #
+                   ###
+                    #
 class DefaultConfig(Config):
     """Default configs"""
 
