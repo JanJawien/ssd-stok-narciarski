@@ -39,8 +39,8 @@ class Simulator:
 
     def __init__(self, state, groups=None, obstacles=None, config_file=None):
         self.config = DefaultConfig()
-        if config_file:
-            self.config.load_config(config_file)
+#         if config_file:
+#             self.config.load_config(config_file)
         # TODO: load obstacles from config
         self.scene_config = self.config.sub_config("scene")
         # initiate obstacles
@@ -55,10 +55,10 @@ class Simulator:
     def make_forces(self, force_configs):
         """Construct forces"""
         force_list = [
-            forces.DesiredForce(),  # mają jeździć slalomem a nie prosto (w skręcie??????)
-            forces.SocialForce(),   # zmienić koło na elipsę
-            forces.ObstacleForce(), # zmienić koło na elipsę
-            # slope
+            # forces.DesiredForce(),  # mają jeździć slalomem a nie prosto (w skręcie??????)
+            # forces.SocialForce(),   # zmienić koło na elipsę
+            # forces.ObstacleForce(), # zmienić koło na elipsę
+            forces.ParallelDownhillForce(), #slope
             # skręt
             # opory
         ]
@@ -78,7 +78,11 @@ class Simulator:
 
     def compute_forces(self):
         """compute forces"""
-        return sum(map(lambda x: x._get_force(), self.forces))
+        # rozłożone na zmienne żeby łatwiej było debugować
+        all_forces = map(lambda x: x._get_force(), self.forces)
+        output = sum(all_forces)
+        print()
+        return output
 
     def get_states(self):
         """Expose whole state"""

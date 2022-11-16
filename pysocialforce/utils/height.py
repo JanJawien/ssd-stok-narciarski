@@ -31,7 +31,7 @@ def sin_alpha(x: float, y: float, r: float = 0.001):
     curposh = height(x, y)
     gradposh = height(x+grad_x, y+grad_y)
     dist = np.sqrt(grad_x**2 + grad_y**2)
-    diff = np.abs(curposh - gradposh)
+    diff = curposh - gradposh
 
     return diff/dist
 
@@ -40,13 +40,12 @@ def cos_beta(x: float, y: float, vx: float, vy: float, r: float = 0.001):
     """Calculate cos of beta angle from height gradient and agent velocity vector.
     Return value is always positive (assumes beta e <0deg, 90deg>)"""
     grad = calculate_grad(x, y, r)
-    horiz = [grad[0], -grad[1]]  # calculate vector perpendicular to gradient
+    horiz = [grad[1], -grad[0]]  # calculate vector perpendicular to gradient
     vel = [vx, vy] # velocity vector
 
     inner = np.inner(horiz, vel)
     norms = LA.norm(horiz) * LA.norm(vel)
 
     return np.abs(inner / norms)
-
 
 

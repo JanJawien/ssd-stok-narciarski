@@ -33,6 +33,11 @@ class Force(ABC):
         self.scene = scene
         self.peds = self.scene.peds
 
+        # print(type(self))
+        # print(type(self.config))
+        # print(self.factor)
+        # print()
+
 
 class DesiredForce(Force):
     """Calculates the force between this agent and the next assigned waypoint.
@@ -140,16 +145,29 @@ class ParallelDownhillForce(Force):
         m = self.config("m")
         g = self.config("g")
         force = np.zeros((self.peds.size(), 2))
-        pos = self.peds.pos()
+        peds = self.scene.peds.state
 
-        for i, p in enumerate(pos):
-            x = self.scene[i][0]
-            y = self.scene[i][1]
-            vx = self.scene[i][2]
-            vy = self.scene[i][3]
+        # f = open("out.txt", "a")
+
+        for i, ped in enumerate(peds):
+            # f.write("v: " + str(ped[2:4]) + "\n")
+            x = ped[0]
+            y = ped[1]
+            vx = ped[2]
+            vy = ped[3]
             sin_alpha = height.sin_alpha(x, y)
             sin_beta = math.sqrt(1 - height.cos_beta(x, y, vx, vy) ** 2)
-            force[i] = m * g * sin_alpha * sin_beta
+
+            f_val = m * g * sin_alpha * sin_beta 
+            # TU JEST COS NIE TAK
+            # SILA POWINNA MIEC ZNAK UJEMNY GDY SIE JEDZIE W GORE STOKU A MA DODATNI
+            # ZMIENILEM SIN_ALPHA TAK ZEBY NIE BYŁO WATOSCI ABSOLUTNEJ I DALEJ NIE DZIAŁA (??????????????????????????)
+            v_norm = [vx, vy] / np.linalg.norm([vx, vy])
+            force[i] = v_norm*f_val
+            # print()
+
+        # f.write("\n")
+        # f.close()
 
         return force * self.factor
 

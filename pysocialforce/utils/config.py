@@ -52,7 +52,7 @@ class DefaultConfig(Config):
     enable_group = true
     agent_radius = 0.35
     step_width = 1.0
-    max_speed_multiplier = 1.3
+    max_speed_multiplier = 10000.0
     tau = 0.5
     resolution = 10
 
@@ -100,6 +100,11 @@ class DefaultConfig(Config):
     factor = 10.0
     sigma = 0.2
     threshold = 3.0
+
+    [parallel_downhill_force]
+    factor = 0.002
+    m = 80.0
+    g = 9.81
 
     [along_wall_force]
     """
