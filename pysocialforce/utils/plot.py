@@ -13,8 +13,10 @@ except ImportError:
     plt = None
     mpl_animation = None
 
-from .logging import logger
+#from .logging import logger
+from .height import get_height
 from .stateutils import minmax
+
 
 
 @contextmanager
@@ -22,6 +24,7 @@ def canvas(image_file=None, **kwargs):
     """Generic matplotlib context."""
     fig, ax = plt.subplots(**kwargs)
     ax.grid(linestyle="dotted")
+
     ax.set_aspect(1.0, "datalim")
     ax.set_axisbelow(True)
 
@@ -128,7 +131,6 @@ class SceneVisualizer:
         return self.ani
 
     def __enter__(self):
-        logger.info("Start plotting.")
         self.fig.set_tight_layout(True)
         self.ax.grid(linestyle="dotted")
         self.ax.set_aspect("equal")
@@ -156,18 +158,13 @@ class SceneVisualizer:
 
     def __exit__(self, exception_type, exception_value, traceback):
         if exception_type:
-            logger.error(
-                f"Exception type: {exception_type}; Exception value: {exception_value}; Traceback: {traceback}"
-            )
-        logger.info("Plotting ends.")
+            pass
         if self.output:
             if self.ani:
                 output = self.output + ".gif"
-                logger.info(f"Saving animation as {output}")
                 self.ani.save(output, writer=self.writer)
             else:
                 output = self.output + ".png"
-                logger.info(f"Saving plot as {output}")
                 self.fig.savefig(output, dpi=300)
         plt.close(self.fig)
 
@@ -179,11 +176,11 @@ class SceneVisualizer:
         states, _ = self.scene.get_states()
         current_state = states[step]
         # radius = 0.2 + np.linalg.norm(current_state[:, 2:4], axis=-1) / 2.0 * 0.3
-        radius = [0.2] * current_state.shape[0]
+        radius = [1] * current_state.shape[0]
         if self.human_actors:
             for i, human in enumerate(self.human_actors):
                 human.center = current_state[i, :2]
-                human.set_radius(0.2)
+                #human.set_radius()
                 # human.set_radius(radius[i])
         else:
             self.human_actors = [
@@ -216,11 +213,19 @@ class SceneVisualizer:
 
         self.group_collection.set_paths(self.group_actors)
 
+    def plot_heatmap(self):
+        y, x = np.meshgrid(np.linspace(-100, 100, 100), np.linspace(-100, 100, 100))
+        z = get_height(x, y)
+        z = z[:-1, :-1]
+        z_min, z_max = z.min(), z.max()
+        self.ax.pcolormesh(x, y, z, cmap='RdBu', vmin=z_min, vmax=z_max)
+
     def plot_obstacles(self):
         for s in self.scene.get_obstacles():
             self.ax.plot(s[:, 0], s[:, 1], "-o", color="black", markersize=2.5)
 
     def animation_init(self):
+        self.plot_heatmap()
         self.plot_obstacles()
         self.ax.add_collection(self.group_collection)
         self.ax.add_collection(self.human_collection)
@@ -231,3 +236,14 @@ class SceneVisualizer:
         self.plot_groups(i)
         self.plot_human(i)
         return (self.group_collection, self.human_collection)
+
+    # 3d plotting
+    def plot_surface(self):
+        y, x = np.meshgrid(np.linspace(-100, 100, 100), np.linspace(-100, 100, 100))
+        z = get_height(x, y)
+
+    def animation_3d_init(self):
+        pass
+
+    def animation_3d_update(self):
+        pass
