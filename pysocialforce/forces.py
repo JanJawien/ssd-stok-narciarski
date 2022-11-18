@@ -107,7 +107,6 @@ class SocialForce(Force):
         force = np.sum(force.reshape((self.peds.size(), -1, 2)), axis=1)
         return force * self.factor
 
-
 class ObstacleForce(Force):
     """Calculates the force between this agent and the nearest obstacle in this
     scene.
@@ -132,8 +131,34 @@ class ObstacleForce(Force):
             dist_mask = dist < threshold
             directions[dist_mask] *= np.exp(-dist[dist_mask].reshape(-1, 1) / sigma)
             force[i] = np.sum(directions[dist_mask], axis=0)
+            print()
 
         return force * self.factor
+
+
+
+class EllipticalObstacleForce(Force):
+    """Calculates the force between this agent and all obstacle points within their social ellipse.
+    :return:  the calculated force
+    """
+
+    def _get_force(self):
+        threshold = self.config("threshold", 0.2)
+        force = np.zeros((self.peds.size(), 2))
+        if len(self.scene.get_obstacles()) == 0:
+            return force
+        obstacles = np.vstack(self.scene.get_obstacles()) 
+        peds = self.scene.peds.state
+
+        for i, ped in enumerate(peds):
+            ped_to_obs = obstacles - ped[:2]
+            speed = ped[2:4].copy()
+            forces = np.array([stateutils.ellipse_obstacle_force(speed, v, threshold) for v in ped_to_obs])
+            force[i] = np.sum(forces, axis=0)
+            print()
+
+        force *= self.factor
+        return force
 
 
 class ParallelDownhillForce(Force):
@@ -174,6 +199,17 @@ class AirResistanceForce(Force):
     def _get_force(self):
 
         force = np.zeros((self.peds.size(), 2))
+
+
+
+
+
+
+
+
+
+
+
 
 class GroupCoherenceForceAlt(Force):
     """ Alternative group coherence force as specified in pedsim_ros"""

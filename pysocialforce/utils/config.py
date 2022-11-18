@@ -41,6 +41,9 @@ class Config:
     def __call__(self, entry: str, default=None):
         return self.config.get(entry) or default
 
+
+    # [scene] doesn't affect PedState parameters
+
               # EDIT HERE #
                     #
                     #
@@ -64,7 +67,7 @@ class DefaultConfig(Config):
     enable_group = true
     agent_radius = 0.35
     step_width = 1.0
-    max_speed_multiplier = 10000.0
+    max_speed_multiplier = 1.3
     tau = 0.5
     resolution = 10
 
@@ -111,6 +114,10 @@ class DefaultConfig(Config):
     [obstacle_force]
     factor = 10.0
     sigma = 0.2
+    threshold = 3.0
+
+    [elliptical_obstacle_force]
+    factor = 0.12
     threshold = 3.0
 
     [parallel_downhill_force]

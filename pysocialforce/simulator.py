@@ -57,8 +57,8 @@ class Simulator:
         force_list = [
             # forces.DesiredForce(),  # mają jeździć slalomem a nie prosto (w skręcie??????)
             # forces.SocialForce(),   # zmienić koło na elipsę
-            # forces.ObstacleForce(), # zmienić koło na elipsę
-            forces.ParallelDownhillForce(), #slope
+            # forces.ObstacleForce(), # oryginaly
+            forces.EllipticalObstacleForce(), # zamieniony na elipsę
             # skręt
             # opory
         ]

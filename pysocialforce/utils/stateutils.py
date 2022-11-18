@@ -3,6 +3,7 @@ from typing import Tuple
 
 import numpy as np
 from numba import njit
+import matplotlib.pyplot as plt
 
 
 # @jit
@@ -116,3 +117,39 @@ def minmax(vecs: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
     x_max = np.max(vecs[:, 0])
     y_max = np.max(vecs[:, 1])
     return (x_min, y_min, x_max, y_max)
+
+
+def foc_to_per(a: float, b: float, axis: np.ndarray, direction: np.ndarray):
+    # https://math.etsu.edu/multicalc/prealpha/chap3/chap3-2/part4.htm
+    axis = axis.copy()
+    direction = direction.copy()
+    axis /= np.linalg.norm(axis)
+    direction /= np.linalg.norm(direction)
+    cos = np.dot(axis, direction)
+    c = np.sqrt(a**2 - b**2)
+    return (b**2 / a) / (1 - c/a * cos)
+
+
+def ellipse_factor(speed_vec: np.ndarray):
+    """Function responsible for stretching circle into ellipse based on agent speed, and other related calculations.
+    For speed vector of norm 0 it should always return 1"""
+    return np.linalg.norm(speed_vec)/10 + 1 
+
+
+def ellipse_obstacle_force(speed: np.ndarray, obstacle: np.ndarray, radius: float):
+    b = radius
+    a = b * ellipse_factor(speed)
+    r = foc_to_per(a, b, speed, obstacle)
+    d = np.linalg.norm(obstacle)
+
+    if d > r:
+        return [0, 0]
+
+    c = np.sqrt(a**2 - b**2)
+    min = a - c
+    max = 2*a - min
+    norm_value = 1 - ((r-min) / (max-min)) # <0, 1>, 0: edge, 1: focal point
+
+    return obstacle / d * -np.exp(-4 * norm_value)
+
+

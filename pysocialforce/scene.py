@@ -74,6 +74,8 @@ class PedState:
         # stop when arrived
         # dont do that for now just let then slide
         # desired_velocity[stateutils.desired_directions(self.state)[1] < 0.5] = [0, 0]
+        # TODO: stop if hit a barrier
+        # TODO: implement moving from full stop later
 
         # update state
         next_state = self.state
