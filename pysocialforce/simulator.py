@@ -56,10 +56,12 @@ class Simulator:
         """Construct forces"""
         force_list = [
             # forces.DesiredForce(),  # mają jeździć slalomem a nie prosto (w skręcie??????)
-            # forces.SocialForce(),   # zmienić koło na elipsę
-            # forces.ObstacleForce(), # oryginaly
-            forces.EllipticalObstacleForce(), # zamieniony na elipsę
-            # skręt
+            # forces.SocialForce(),   # originalny
+            # forces.ObstacleForce(), # oryginalny
+			forces.ParallelDownhillForce(),
+            # forces.EllipticalObstacleForce(), # zamieniony na elipsę
+            # forces.EllipticalSocialForce(), # zamieniony na elipsę
+			forces.TowardsDownhillForce(), # skręcanie pod względem prędkości
             # opory
         ]
         group_forces = [

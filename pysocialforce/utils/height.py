@@ -11,7 +11,10 @@ def get_height(x: float, y: float):
     # return (np.sin(x)-2*x)/10 + np.sin(x/10)
 
     # simple equal slope
-    return np.cos(x) + x/20
+    return x/6
+
+	# wobbly cos slope
+    # return np.cos(x) + x/20
 
 
 def calculate_grad(x: float, y: float, r: float = 0.001):

@@ -136,7 +136,7 @@ def ellipse_factor(speed_vec: np.ndarray):
     return np.linalg.norm(speed_vec)/10 + 1 
 
 
-def ellipse_obstacle_force(speed: np.ndarray, obstacle: np.ndarray, radius: float):
+def ellipse_obstacle_force(speed: np.ndarray, obstacle: np.ndarray, radius: float) -> np.ndarray:
     b = radius
     a = b * ellipse_factor(speed)
     r = foc_to_per(a, b, speed, obstacle)
@@ -153,3 +153,57 @@ def ellipse_obstacle_force(speed: np.ndarray, obstacle: np.ndarray, radius: floa
     return obstacle / d * -np.exp(-4 * norm_value)
 
 
+def ped_ellipse_center(ped: np.ndarray, radius: float):
+    speed = ped[2:4].copy()
+    b = radius
+    a = b * ellipse_factor(speed)
+    c = np.sqrt(a**2 - b**2)
+
+    speed /= np.linalg.norm(speed) * c
+    return ped[0:2] + speed
+
+
+def ellipse_social_force(ped: np.ndarray, other_ped: np.ndarray, radius: float):
+    # op_future_pos = ped_ellipse_center(other_ped, radius)
+    ped_pos_delta = other_ped[0:2] - ped[0:2]
+
+    force = ellipse_obstacle_force(ped[2:4].copy(), ped_pos_delta, radius)
+    force = np.array(force) * np.linalg.norm(ped[2:4])
+    return force
+
+
+def slowingValue(speed: float):
+	return 0 if speed<1.0 else (1 if speed>1.5 else (1 - np.sqrt(1-((2*speed - 2)**2))))
+	# return 0 if speed<1.0 else (1 if speed>1.5 else (2*speed - 2))
+
+
+def speedingValue(speed: float):
+	return 1 if speed<0.5 else (0 if speed>1.0 else (1 - np.sqrt(1-((2*speed - 2)**2))))
+	# return 1 if speed<0.5 else (0 if speed>1.0 else (-2*speed + 2))
+
+
+def applyDesiredSpeedForce(direction: np.ndarray, turns_right: bool, is_too_fast: bool, desired_speed: float):
+	speed_val = np.linalg.norm(direction)
+	direction /= speed_val
+	force_val = 0
+	if is_too_fast:
+		force_val = slowingValue(speed_val/desired_speed)
+	else:
+		force_val = speedingValue(speed_val/desired_speed)
+
+	if force_val == 0:
+		return [0, 0]
+
+	sin = np.sin(np.arcsin(force_val/2/speed_val)*2)
+	if turns_right:
+		sin *= -1
+	return rotateVector(direction*force_val, sin)
+
+
+def rotateVector(vector: np.ndarray, sin: float):
+	if sin == 0:
+		return vector
+	
+	cos = np.sqrt(1 - (sin**2))
+	rot = [[cos, -sin], [sin, cos]]
+	return np.dot(rot, vector)

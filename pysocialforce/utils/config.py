@@ -120,6 +120,14 @@ class DefaultConfig(Config):
     factor = 0.12
     threshold = 3.0
 
+    [elliptical_social_force]
+    factor = 2.0
+    threshold = 3.0
+
+    [towards_downhill_force]
+    factor = 5.0
+    desired_speed = 5
+
     [parallel_downhill_force]
     factor = 0.002
     m = 80.0

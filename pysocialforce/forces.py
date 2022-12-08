@@ -161,6 +161,65 @@ class EllipticalObstacleForce(Force):
         return force
 
 
+
+class EllipticalSocialForce(Force):
+    """Calculates the force between agents within their social ellipses.
+    :return:  the calculated force
+    """
+
+    def _get_force(self):
+        threshold = self.config("threshold", 0.2)
+        force = np.zeros((self.peds.size(), 2))
+        peds = self.scene.peds.state
+
+        for i, ped in enumerate(peds):
+            forces = []
+            for oi, oped in enumerate(peds):
+                if oi == i:
+                    continue
+                forces.append(stateutils.ellipse_social_force(ped, oped, threshold))
+            force[i] = np.sum(forces, axis=0)
+
+        force *= self.factor
+        return force
+
+
+class TowardsDownhillForce(Force):
+    """Applies force turning a skier towards the downhill gradient if their speed is lower than desired
+    """
+
+    def _get_force(self):
+        threshold = self.config("threshold", 0.2)
+        desired_speed = self.config("desired_speed", 10)
+        force = np.zeros((self.peds.size(), 2))
+        peds = self.scene.peds.state
+
+        for i, ped in enumerate(peds):
+            speed = ped[2:4].copy()
+            left = [-speed[1], speed[0]]
+            right = [speed[1], -speed[0]]
+            downhill = height.calculate_grad(ped[0], ped[1])
+
+            inner = np.inner(left, downhill)
+            norms = np.linalg.norm(left) * np.linalg.norm(downhill)
+            cos_left = inner / norms
+            inner = np.inner(right, downhill)
+            norms = np.linalg.norm(right) * np.linalg.norm(downhill)
+            cos_right = inner / norms
+
+            slowing_down = np.linalg.norm(speed) > desired_speed
+            turns_right = ((slowing_down and cos_left > cos_right) or
+                           (not slowing_down and cos_right > cos_left))
+            direction = left
+            if turns_right:
+                direction = right
+            
+            force[i] = stateutils.applyDesiredSpeedForce(direction, turns_right, slowing_down, desired_speed)
+
+        force *= self.factor
+        return force
+
+
 class ParallelDownhillForce(Force):
     '''
     Calculates the gravity force acting on agent.
