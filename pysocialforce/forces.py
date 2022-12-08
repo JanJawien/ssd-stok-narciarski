@@ -189,8 +189,9 @@ class TowardsDownhillForce(Force):
     """
 
     def _get_force(self):
-        threshold = self.config("threshold", 0.2)
-        desired_speed = self.config("desired_speed", 10)
+        dead_angle = self.config("dead_angle", 0.15)
+        max_angle = self.config("max_angle", 0.35)
+        desired_speed = self.config("desired_speed", 5)
         force = np.zeros((self.peds.size(), 2))
         peds = self.scene.peds.state
 
@@ -199,24 +200,22 @@ class TowardsDownhillForce(Force):
             left = [-speed[1], speed[0]]
             right = [speed[1], -speed[0]]
             downhill = height.calculate_grad(ped[0], ped[1])
-
-            inner = np.inner(left, downhill)
-            norms = np.linalg.norm(left) * np.linalg.norm(downhill)
-            cos_left = inner / norms
-            inner = np.inner(right, downhill)
-            norms = np.linalg.norm(right) * np.linalg.norm(downhill)
-            cos_right = inner / norms
-
+            cos_left = stateutils.vectorCos(left, downhill)
+            cos_right = stateutils.vectorCos(right, downhill)
             slowing_down = np.linalg.norm(speed) > desired_speed
+
+            desired_direction_angle = np.arccos(stateutils.vectorCos((speed*-1 if slowing_down else speed), downhill))
+            if desired_direction_angle < dead_angle:
+                force[i] = [0, 0]
+                continue
+
+            direction = left
             turns_right = ((slowing_down and cos_left > cos_right) or
                            (not slowing_down and cos_right > cos_left))
-            direction = left
             if turns_right:
                 direction = right
             
-            force[i] = stateutils.applyDesiredSpeedForce(direction, turns_right, slowing_down, desired_speed)
-
-        force *= self.factor
+            force[i] = stateutils.applyDesiredSpeedForce(direction, turns_right, slowing_down, desired_speed, self.factor, max_angle)
         return force
 
 

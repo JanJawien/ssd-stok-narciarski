@@ -125,7 +125,9 @@ class DefaultConfig(Config):
     threshold = 3.0
 
     [towards_downhill_force]
-    factor = 5.0
+    factor = 20.0
+	dead_angle = 0.15
+	max_angle = 0.35
     desired_speed = 5
 
     [parallel_downhill_force]

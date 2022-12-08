@@ -119,6 +119,12 @@ def minmax(vecs: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
     return (x_min, y_min, x_max, y_max)
 
 
+def vectorCos(v1: np.ndarray, v2: np.ndarray):
+	inner = np.inner(v1, v2)
+	norms = np.linalg.norm(v1) * np.linalg.norm(v2)
+	return inner / norms
+
+
 def foc_to_per(a: float, b: float, axis: np.ndarray, direction: np.ndarray):
     # https://math.etsu.edu/multicalc/prealpha/chap3/chap3-2/part4.htm
     axis = axis.copy()
@@ -173,31 +179,33 @@ def ellipse_social_force(ped: np.ndarray, other_ped: np.ndarray, radius: float):
 
 
 def slowingValue(speed: float):
-	return 0 if speed<1.0 else (1 if speed>1.5 else (1 - np.sqrt(1-((2*speed - 2)**2))))
+	return 0 if speed<1.1 else (1 if speed>1.6 else (1 - np.sqrt(1-((2*speed - 2.2)**2))))
 	# return 0 if speed<1.0 else (1 if speed>1.5 else (2*speed - 2))
 
 
 def speedingValue(speed: float):
-	return 1 if speed<0.5 else (0 if speed>1.0 else (1 - np.sqrt(1-((2*speed - 2)**2))))
+	return 1 if speed<0.4 else (0 if speed>0.9 else (1 - np.sqrt(1-((2*speed - 1.8)**2))))
 	# return 1 if speed<0.5 else (0 if speed>1.0 else (-2*speed + 2))
 
 
-def applyDesiredSpeedForce(direction: np.ndarray, turns_right: bool, is_too_fast: bool, desired_speed: float):
+def applyDesiredSpeedForce(direction: np.ndarray, turns_right: bool, is_too_fast: bool, desired_speed: float, force_val: float, max_angle: float):
+	STEP_WIDTH = 0.4
 	speed_val = np.linalg.norm(direction)
 	direction /= speed_val
-	force_val = 0
 	if is_too_fast:
-		force_val = slowingValue(speed_val/desired_speed)
+		force_val *= slowingValue(speed_val/desired_speed)
 	else:
-		force_val = speedingValue(speed_val/desired_speed)
+		force_val *= speedingValue(speed_val/desired_speed)
 
 	if force_val == 0:
 		return [0, 0]
+	if np.arctan(force_val/speed_val * STEP_WIDTH) > max_angle:
+		force_val = speed_val*np.tan(max_angle)
 
 	sin = np.sin(np.arcsin(force_val/2/speed_val)*2)
 	if turns_right:
 		sin *= -1
-	return rotateVector(direction*force_val, sin)
+	return rotateVector(direction*force_val, sin)/STEP_WIDTH
 
 
 def rotateVector(vector: np.ndarray, sin: float):
