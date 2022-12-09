@@ -1,5 +1,5 @@
 """Utility functions for plots and animations."""
-
+import math
 from contextlib import contextmanager
 
 import numpy as np
@@ -9,6 +9,7 @@ try:
     import matplotlib.animation as mpl_animation
     from matplotlib.patches import Circle, Polygon
     from matplotlib.collections import PatchCollection
+    from mpl_toolkits.mplot3d.art3d import patch_collection_2d_to_3d, Patch3DCollection, pathpatch_2d_to_3d
 except ImportError:
     plt = None
     mpl_animation = None
@@ -66,7 +67,7 @@ class SceneVisualizer:
     """Context for social nav vidualization"""
 
     def __init__(
-        self, scene, output=None, writer="imagemagick", cmap="viridis", agent_colors=None, **kwargs
+        self, scene, output=None, plot_type="2d", writer="imagemagick", cmap="viridis", agent_colors=None, **kwargs
     ):
         self.scene = scene
         self.states, self.group_states = self.scene.get_states()
@@ -76,7 +77,11 @@ class SceneVisualizer:
         self.output = output
         self.writer = writer
 
-        self.fig, self.ax = plt.subplots(**kwargs)
+        if plot_type == "3d":
+            self.fig = plt.figure()
+            self.ax = self.fig.add_subplot(projection="3d")
+        else:
+            self.fig, self.ax = plt.subplots(**kwargs)
 
         self.ani = None
 
@@ -100,13 +105,13 @@ class SceneVisualizer:
         """Main method for create plot"""
         self.plot_obstacles()
         groups = self.group_states[0]  # static group for now
+
         if not groups:
             for ped in range(self.scene.peds.size()):
                 x = self.states[:, ped, 0]
                 y = self.states[:, ped, 1]
                 self.ax.plot(x, y, "-o", label=f"ped {ped}", markersize=2.5)
         else:
-
             colors = plt.cm.rainbow(np.linspace(0, 1, len(groups)))
 
             for i, group in enumerate(groups):
@@ -133,11 +138,13 @@ class SceneVisualizer:
     def __enter__(self):
         self.fig.set_tight_layout(True)
         self.ax.grid(linestyle="dotted")
-        self.ax.set_aspect("equal")
+        self.ax.set_aspect("equal", "box")
         self.ax.margins(2.0)
         self.ax.set_axisbelow(True)
         self.ax.set_xlabel("x [m]")
         self.ax.set_ylabel("y [m]")
+        if self.ax.name == "3d":
+            self.ax.set_zlabel("z [m]")
 
         plt.rcParams["animation.html"] = "jshtml"
 
@@ -230,20 +237,61 @@ class SceneVisualizer:
         self.ax.add_collection(self.group_collection)
         self.ax.add_collection(self.human_collection)
 
-        return (self.group_collection, self.human_collection)
+        return self.group_collection, self.human_collection
 
     def animation_update(self, i):
         self.plot_groups(i)
         self.plot_human(i)
-        return (self.group_collection, self.human_collection)
+        return self.group_collection, self.human_collection
+
+    def plot_surface(self, x_lim, y_lim):
+        y, x = np.meshgrid(np.linspace(y_lim[0], y_lim[1], 100), np.linspace(x_lim[0], x_lim[1], 100))
+        z = get_height(x, y)
+        self.ax.plot_wireframe(x, y, z, rstride=10, cstride=10, linewidth=0.5)
 
     # 3d plotting
-    def plot_surface(self):
-        y, x = np.meshgrid(np.linspace(-100, 100, 100), np.linspace(-100, 100, 100))
-        z = get_height(x, y)
+    def plot_3d(self):
+        """Main method for create plot"""
+        groups = self.group_states[0]  # static group for now
+        surface_minmax = None
+        if not groups:
+            for ped in range(self.scene.peds.size()):
+                x = self.states[:, ped, 0]
+                y = self.states[:, ped, 1]
+                self.ax.plot(x, y, get_height(x, y),  marker=11, label=f"ped {ped}", markersize=2.5)
+        else:
+            colors = plt.cm.rainbow(np.linspace(0, 1, len(groups)))
+
+            for i, group in enumerate(groups):
+                for ped in group:
+                    x = self.states[:, ped, 0]
+                    y = self.states[:, ped, 1]
+                    self.ax.plot(x, y, get_height(x, y),  "-o", label=f"ped {ped}", markersize=2.5, color=colors[i])
+        self.ax.legend()
+        self.plot_surface(self.ax.get_xlim(), self.ax.get_ylim())
+        self.ax.set_aspect('equal', 'box')
+        self.ax.view_init(15, 135)
+        return self.fig
+
+    def animate_3d(self):
+        """Main method to create animation"""
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(projection="3d")
+        self.ani = mpl_animation.FuncAnimation(
+            self.fig,
+            init_func=self.animation_3d_init,
+            func=self.animation_3d_update,
+            frames=self.frames,
+            blit=True,
+        )
+        return self.ani
 
     def animation_3d_init(self):
-        pass
+        self.plot_surface()
+        self.ax.add_collection(self.group_collection)
+        self.ax.add_collection(self.human_collection)
 
-    def animation_3d_update(self):
-        pass
+        return self.group_collection, self.human_collection
+
+    def animation_3d_update(self, i):
+        return self.group_collection, self.human_collection
