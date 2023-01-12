@@ -60,7 +60,7 @@ class Simulator:
     def make_friction_forces(self, force_configs):
         """Construct friction forces; DO NOT CHANGE THE ORDER OF THESE FORCES"""
         force_list = [
-			# forces.AirResistanceForce(),        # TODO opory powietrza  
+			forces.AirResistanceForce(),        # opory powietrza  
 			forces.StaticFrictionForce(),       # tarcie w bezruchu 
 			forces.KinematicFrictionForce()     # tarcie w jeździe
         ]

@@ -269,9 +269,19 @@ class ParallelDownhillForce(Force):
 
 
 class AirResistanceForce(Force):
-    def _get_force(self):
+    def _get_force(self, primary_forces):
+        Sd = self.config("Sd")
+        force = np.ones((self.peds.size(), 2))
+        peds = self.scene.peds.state
 
-        force = np.zeros((self.peds.size(), 2))
+        for i, ped in enumerate(peds):
+            speed = ped[2:4].copy()
+            speed_val = np.linalg.norm(speed)
+            direction = speed / speed_val
+
+            force[i] = direction * speed_val**2 * Sd * -1/2
+
+        return force * self.factor
 
 
 class KinematicFrictionForce(Force):

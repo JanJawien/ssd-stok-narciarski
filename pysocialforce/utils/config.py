@@ -136,12 +136,16 @@ class DefaultConfig(Config):
     towards_downhill_turn_bias = 0.3
 
     [parallel_downhill_force]
-    factor = 0.011
+    factor = 0.015
     m = 80.0
     g = 9.81
 
+    [air_resistance_force]
+    factor = 0.12
+    Sd = 0.6
+
     [kinematic_friction_force]
-    factor = 0.012
+    factor = 0.005
     m = 80.0
     g = 9.81
     min_speed = 0.05
