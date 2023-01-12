@@ -8,6 +8,8 @@ from pysocialforce.utils import DefaultConfig
 from pysocialforce.scene import PedState, EnvState
 from pysocialforce import forces
 
+import numpy as np
+
 
 class Simulator:
     """Simulate social force model.
@@ -52,17 +54,33 @@ class Simulator:
         # construct forces
         self.forces = self.make_forces(self.config)
 
-    def make_forces(self, force_configs):
-        """Construct forces"""
+        # construct friction forces
+        self.friction_forces = self.make_friction_forces(self.config)
+
+    def make_friction_forces(self, force_configs):
+        """Construct friction forces; DO NOT CHANGE THE ORDER OF THESE FORCES"""
         force_list = [
-            # forces.DesiredForce(),  # mają jeździć slalomem a nie prosto (w skręcie??????)
-            # forces.SocialForce(),   # originalny
-            # forces.ObstacleForce(), # oryginalny
-			forces.ParallelDownhillForce(),
-            # forces.EllipticalObstacleForce(), # zamieniony na elipsę
-            # forces.EllipticalSocialForce(), # zamieniony na elipsę
-			forces.TowardsDownhillForce(), # skręcanie pod względem prędkości
-            # opory
+			# forces.AirResistanceForce(),        # TODO opory powietrza  
+			forces.StaticFrictionForce(),       # tarcie w bezruchu 
+			forces.KinematicFrictionForce()     # tarcie w jeździe
+        ]
+
+        # initiate forces
+        for force in force_list:
+            force.init(self, force_configs)
+
+        return force_list
+
+    def make_forces(self, force_configs):
+        """Construct forces; DO NOT CHANGE THE ORDER OF THESE FORCES"""
+        force_list = [
+            # forces.DesiredForce(),        # oryginalny, jazda do celu
+            # forces.SocialForce(),         # originalny
+            # forces.ObstacleForce(),       # oryginalny
+			forces.ParallelDownhillForce(),     # zjazd wzdłuż kierunku nart
+            forces.EllipticalObstacleForce(),   # zamieniony na elipsę
+            forces.EllipticalSocialForce(),     # zamieniony na elipsę
+			forces.TowardsDownhillForce(),      # skręcanie pod względem prędkości
         ]
         group_forces = [
             # forces.GroupCoherenceForceAlt(),
@@ -80,10 +98,26 @@ class Simulator:
 
     def compute_forces(self):
         """compute forces"""
-        # rozłożone na zmienne żeby łatwiej było debugować
-        all_forces = map(lambda x: x._get_force(), self.forces)
-        output = sum(all_forces)
-        print()
+        # calculate all primary forces acting on each skier
+        primary_forces = np.array([f._get_force() for f in self.forces])
+        primary_sum = np.sum(primary_forces, 0)
+        # print("Forces:")
+        # print(primary_forces)
+        # print("Sum:")
+        # print(primary_sum)
+
+        # calculate friction forces based on primary forces
+        friction_forces = np.array([f._get_force(primary_forces) for f in self.friction_forces])
+        friction_sum = np.sum(friction_forces, 0)
+        # print("Friction forces:")
+        # print(friction_forces)
+        # print("Friction sum:")
+        # print(friction_sum)
+
+        output = (primary_sum + friction_sum)
+        print(primary_sum)
+        print(friction_sum)
+        print(output)
         return output
 
     def get_states(self):

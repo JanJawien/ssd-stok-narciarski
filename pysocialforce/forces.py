@@ -259,8 +259,72 @@ class AirResistanceForce(Force):
         force = np.zeros((self.peds.size(), 2))
 
 
+class KinematicFrictionForce(Force):
+    def _get_force(self, primary_forces):
+        m = self.config("m")
+        g = self.config("g")
+        friction_coef = self.config("friction_coef")
+        min_speed = self.config("min_speed", 0.05)
+        force = np.ones((self.peds.size(), 2))
+        peds = self.scene.peds.state
+
+        for i, ped in enumerate(peds):
+            if np.linalg.norm(ped[2:4]) < min_speed:
+                force[i] = [0, 0]
+                continue
+
+            # print("Kinematic | " + str(i) + ":")
+            # ped_forces = primary_forces[1:, i, :]
+            # print(ped_forces)
+
+            sin_alpha = height.sin_alpha(ped[0], ped[1])
+            cos_alpha = np.sqrt(1 - (sin_alpha**2) )
+            cos_beta = height.cos_beta(ped[0], ped[1], ped[2], ped[3])
+            
+            Fc = np.linalg.norm( np.sum(primary_forces[1:, i, :]) ) # wartość wszystich sił poza ParallelDownhillForce (czyli tych, które powodują skręt)
+            Flat = m * g * sin_alpha * cos_beta
+            Ftl = Fc + Flat
+            Fn = m * g * cos_alpha
+            Feff = np.sqrt(Ftl**2 + Fn**2)
+
+            direction = (ped[2:4].copy()) / np.linalg.norm(ped[2:4])
+
+            force[i] = direction * ( friction_coef * (Fn + Feff) ) * -1
+
+        return force * self.factor
 
 
+class StaticFrictionForce(Force):
+    def _get_force(self, primary_forces):
+        m = self.config("m")
+        g = self.config("g")
+        static_friction_coef = self.config("static_friction_coef")
+        max_speed = self.config("max_speed", 0.05)
+        force = np.ones((self.peds.size(), 2))
+        peds = self.scene.peds.state
+
+        for i, ped in enumerate(peds):
+            if np.linalg.norm(ped[2:4]) > max_speed:
+                force[i] = [0, 0]
+                continue
+
+            # print("Kinematic | " + str(i) + ":")
+            # ped_forces = primary_forces[:, i, :]
+            # print(ped_forces)
+
+            sin_alpha = height.sin_alpha(ped[0], ped[1])
+            cos_alpha = np.sqrt(1 - (sin_alpha**2) )
+            
+            Fnet = np.sum(primary_forces[:, i, :], 0) # wartość wszystich sił działających na narciarza
+            Fn = m * g * cos_alpha
+
+            value = np.linalg.norm(Fnet) if np.linalg.norm(Fnet) < Fn*static_friction_coef else Fn*static_friction_coef
+
+            direction = (Fnet.copy()) / np.linalg.norm(Fnet)
+
+            force[i] = direction * value * -1
+
+        return force * self.factor
 
 
 
