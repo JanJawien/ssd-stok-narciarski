@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 
 from pysocialforce.utils import stateutils
+from pysocialforce.utils.config import DefaultConfig
 
 
 class PedState:
@@ -11,7 +12,7 @@ class PedState:
 
     def __init__(self, state, groups, config):
         self.default_tau = config("tau", 0.5)
-        self.step_width = config("step_width", 0.4)
+        self.step_width = DefaultConfig.STEP_WIDTH
         self.agent_radius = config("agent_radius", 0.35)
         self.max_speed_multiplier = config("max_speed_multiplier", 10000.0) # 1.3
 

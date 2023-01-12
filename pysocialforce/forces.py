@@ -131,7 +131,7 @@ class ObstacleForce(Force):
             dist_mask = dist < threshold
             directions[dist_mask] *= np.exp(-dist[dist_mask].reshape(-1, 1) / sigma)
             force[i] = np.sum(directions[dist_mask], axis=0)
-            print()
+            # print()
 
         return force * self.factor
 
@@ -155,7 +155,7 @@ class EllipticalObstacleForce(Force):
             speed = ped[2:4].copy()
             forces = np.array([stateutils.ellipse_obstacle_force(speed, v, threshold) for v in ped_to_obs])
             force[i] = np.sum(forces, axis=0)
-            print()
+            # print()
 
         force *= self.factor
         return force
@@ -192,30 +192,45 @@ class TowardsDownhillForce(Force):
         dead_angle = self.config("dead_angle", 0.15)
         max_angle = self.config("max_angle", 0.35)
         desired_speed = self.config("desired_speed", 5)
+        factor_offset = self.config("factor_offset", 0.0)
+        turn_overshoot = self.config("turn_overshoot", 0.01)
+        towards_downhill_turn_bias = self.config("towards_downhill_turn_bias", 0.3)
         force = np.zeros((self.peds.size(), 2))
         peds = self.scene.peds.state
 
         for i, ped in enumerate(peds):
-            speed = ped[2:4].copy()
-            left = [-speed[1], speed[0]]
-            right = [speed[1], -speed[0]]
-            downhill = height.calculate_grad(ped[0], ped[1])
-            cos_left = stateutils.vectorCos(left, downhill)
-            cos_right = stateutils.vectorCos(right, downhill)
-            slowing_down = np.linalg.norm(speed) > desired_speed
+            speed = ped[2:4].copy()                                 # speed vector
+            left = [-speed[1], speed[0]]                            # leftward vector
+            right = [speed[1], -speed[0]]                           # rightward vector
+            downhill = height.calculate_grad(ped[0], ped[1])        # downhill direction vector
+            cos_left = stateutils.vectorCos(left, downhill)         # cos between leftward and downhill
+            cos_right = stateutils.vectorCos(right, downhill)       # cos between rightward and downhill
+            slowing_down = np.linalg.norm(speed) > desired_speed    # is going too fast?
 
-            desired_direction_angle = np.arccos(stateutils.vectorCos((speed*-1 if slowing_down else speed), downhill))
-            if desired_direction_angle < dead_angle:
+            # angle between current direction and desired direction (downhill if wants to got faster, uphill if wants to go slower)
+            desired_direction_angle = np.arccos(stateutils.vectorCos((speed*-1 if slowing_down else speed), downhill)) 
+            # if angle within dead angle (downhill direction margin), dont turn
+            ped_dead_angle = dead_angle
+            if not slowing_down:
+                ped_dead_angle *= towards_downhill_turn_bias
+            if desired_direction_angle < ped_dead_angle:
                 force[i] = [0, 0]
                 continue
+            # perform weaker turn when closing to downhill axis to avoid oscillating around it
+            ped_max_angle = max_angle
+            if not slowing_down:
+                ped_max_angle *= towards_downhill_turn_bias
+            if desired_direction_angle < ped_max_angle:
+                ped_max_angle = desired_direction_angle + turn_overshoot
 
+            # get direction of desired turn
             direction = left
             turns_right = ((slowing_down and cos_left > cos_right) or
                            (not slowing_down and cos_right > cos_left))
             if turns_right:
                 direction = right
             
-            force[i] = stateutils.applyDesiredSpeedForce(direction, turns_right, slowing_down, desired_speed, self.factor, max_angle)
+            force[i] = stateutils.applyDesiredSpeedForce(direction, turns_right, slowing_down, desired_speed, self.factor, ped_max_angle, factor_offset)
         return force
 
 
@@ -245,7 +260,7 @@ class ParallelDownhillForce(Force):
             f_val = m * g * sin_alpha * sin_beta 
             v_norm = [vx, vy] / np.linalg.norm([vx, vy])
             force[i] = v_norm*f_val
-            print()
+            # print()
 
         # f.write("\n")
         # f.close()

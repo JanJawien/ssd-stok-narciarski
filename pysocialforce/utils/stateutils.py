@@ -5,6 +5,8 @@ import numpy as np
 from numba import njit
 import matplotlib.pyplot as plt
 
+from pysocialforce.utils.config import DefaultConfig
+
 
 # @jit
 # def normalize(array_in):
@@ -120,9 +122,9 @@ def minmax(vecs: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
 
 
 def vectorCos(v1: np.ndarray, v2: np.ndarray):
-	inner = np.inner(v1, v2)
-	norms = np.linalg.norm(v1) * np.linalg.norm(v2)
-	return inner / norms
+    inner = np.inner(v1, v2)
+    norms = np.linalg.norm(v1) * np.linalg.norm(v2)
+    return inner / norms
 
 
 def foc_to_per(a: float, b: float, axis: np.ndarray, direction: np.ndarray):
@@ -139,22 +141,30 @@ def foc_to_per(a: float, b: float, axis: np.ndarray, direction: np.ndarray):
 def ellipse_factor(speed_vec: np.ndarray):
     """Function responsible for stretching circle into ellipse based on agent speed, and other related calculations.
     For speed vector of norm 0 it should always return 1"""
-    return np.linalg.norm(speed_vec)/10 + 1 
+    x = np.linalg.norm(speed_vec)
+    # return x/10 + 1
+    return x**2/50 + x/10 + 1
 
 
 def ellipse_obstacle_force(speed: np.ndarray, obstacle: np.ndarray, radius: float) -> np.ndarray:
     b = radius
     a = b * ellipse_factor(speed)
-    r = foc_to_per(a, b, speed, obstacle)
     d = np.linalg.norm(obstacle)
 
+    # if distance to obstacle is larger than the major ellipse axis, return no force
+    # rough estimation that cuts calculation time by over 80%
+    if d > a:
+        return [0, 0]
+
+    # if obstacle is precisely outside of the ellipse, return no force
+    r = foc_to_per(a, b, speed, obstacle)
     if d > r:
         return [0, 0]
 
     c = np.sqrt(a**2 - b**2)
     min = a - c
     max = 2*a - min
-    norm_value = 1 - ((r-min) / (max-min)) # <0, 1>, 0: edge, 1: focal point
+    norm_value = 1 - ((r-min) / (max-min))  # <0, 1>, 0: edge, 1: focal point
 
     return obstacle / d * -np.exp(-4 * norm_value)
 
@@ -178,40 +188,45 @@ def ellipse_social_force(ped: np.ndarray, other_ped: np.ndarray, radius: float):
     return force
 
 
-def slowingValue(speed: float):
-	return 0 if speed<0.95 else (1 if speed>1.45 else (1 - np.sqrt(1-((2*speed - 1.9)**2))))
-	# return 0 if speed<1.0 else (1 if speed>1.5 else (2*speed - 2))
+def slowingValue(speed: float, offset: float = 0.0):
+    return 1 if speed > 1.5-offset else (
+           0 if speed < 1.0-offset else (
+           1 - np.sqrt(1 - 4*((speed - 1 + offset)**2))
+        ))
 
 
-def speedingValue(speed: float):
-	return 1 if speed<0.55 else (0 if speed>1.05 else (1 - np.sqrt(1-((2*speed - 2.1)**2))))
-	# return 1 if speed<0.5 else (0 if speed>1.0 else (-2*speed + 2))
+def speedingValue(speed: float, offset: float = 0.0):
+    return 1 if speed < 0.5+offset else (
+           0 if speed > 1.0+offset else (
+           1 - np.sqrt(1 - 4*((speed - 1 - offset)**2))
+        ))
 
 
-def applyDesiredSpeedForce(direction: np.ndarray, turns_right: bool, is_too_fast: bool, desired_speed: float, force_val: float, max_angle: float):
-	STEP_WIDTH = 0.4
-	speed_val = np.linalg.norm(direction)
-	direction /= speed_val
-	if not is_too_fast:
-		force_val *= speedingValue(speed_val/desired_speed)
-	else:
-		force_val *= slowingValue(speed_val/desired_speed)
+def applyDesiredSpeedForce(direction: np.ndarray, turns_right: bool, is_too_fast: bool, desired_speed: float, force_val: float, max_angle: float, offset: float):
+    STEP_WIDTH = DefaultConfig.STEP_WIDTH
+    speed_val = np.linalg.norm(direction)
+    direction /= speed_val
 
-	if force_val == 0:
-		return [0, 0]
-	if np.arctan(force_val/speed_val * STEP_WIDTH) > max_angle:
-		force_val = speed_val*np.tan(max_angle)
+    if not is_too_fast:
+        force_val *= speedingValue(speed_val/desired_speed, offset)
+    else:
+        force_val *= slowingValue(speed_val/desired_speed, offset)
 
-	sin = np.sin(np.arcsin(force_val/2/speed_val)*2)
-	if turns_right:
-		sin *= -1
-	return rotateVector(direction*force_val, sin)/STEP_WIDTH
+    if force_val == 0:
+        return [0, 0]
+    if np.arctan(force_val/speed_val * STEP_WIDTH) > max_angle:
+        force_val = speed_val*np.tan(max_angle)/STEP_WIDTH
+
+    sin = np.sin(np.arcsin(force_val/2/speed_val)*2)
+    if turns_right:
+        sin *= -1
+    return rotateVector(direction*force_val, sin)/STEP_WIDTH
 
 
 def rotateVector(vector: np.ndarray, sin: float):
-	if sin == 0:
-		return vector
-	
-	cos = np.sqrt(1 - (sin**2))
-	rot = [[cos, -sin], [sin, cos]]
-	return np.dot(rot, vector)
+    if sin == 0:
+        return vector
+
+    cos = np.sqrt(1 - (sin**2))
+    rot = [[cos, -sin], [sin, cos]]
+    return np.dot(rot, vector)

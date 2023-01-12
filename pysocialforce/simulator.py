@@ -115,9 +115,9 @@ class Simulator:
         # print(friction_sum)
 
         output = (primary_sum + friction_sum)
-        print(primary_sum)
-        print(friction_sum)
-        print(output)
+        # print(primary_sum)
+        # print(friction_sum)
+        # print(output)
         return output
 
     def get_states(self):

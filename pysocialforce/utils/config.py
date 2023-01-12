@@ -60,6 +60,8 @@ class Config:
 class DefaultConfig(Config):
     """Default configs"""
 
+    STEP_WIDTH = 0.4
+
     CONFIG = """
     title = "Social Force Default Config File"
 
@@ -117,26 +119,29 @@ class DefaultConfig(Config):
     threshold = 3.0
 
     [elliptical_obstacle_force]
-    factor = 0.12
-    threshold = 3.0
+    factor = 0.05
+    threshold = 15.0
 
     [elliptical_social_force]
-    factor = 2.0
-    threshold = 3.0
+    factor = 1.0
+    threshold = 12.0
 
     [towards_downhill_force]
-    factor = 20.0
+    factor = 12.0
 	dead_angle = 0.15
-	max_angle = 0.35
+	max_angle = 0.30
     desired_speed = 5
+    factor_offset = 0.05
+    turn_overshoot = 0.05
+    towards_downhill_turn_bias = 0.3
 
     [parallel_downhill_force]
-    factor = 0.004
+    factor = 0.011
     m = 80.0
     g = 9.81
 
     [kinematic_friction_force]
-    factor = 0.005
+    factor = 0.012
     m = 80.0
     g = 9.81
     min_speed = 0.05
