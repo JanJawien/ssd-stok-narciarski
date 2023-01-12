@@ -131,23 +131,23 @@ class DefaultConfig(Config):
     desired_speed = 5
 
     [parallel_downhill_force]
-    factor = 0.02
+    factor = 0.004
     m = 80.0
     g = 9.81
 
     [kinematic_friction_force]
-    factor = 0.02
+    factor = 0.005
     m = 80.0
     g = 9.81
     min_speed = 0.05
-    friction_coef = 0.1
+    friction_coef = 0.05
 
     [static_friction_force]
-    factor = 0.02
+    factor = 0.005
     m = 80.0
     g = 9.81
     max_speed = 0.05
-    static_friction_coef = 0.1
+    static_friction_coef = 0.05
 
     [along_wall_force]
     """

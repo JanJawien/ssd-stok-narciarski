@@ -179,12 +179,12 @@ def ellipse_social_force(ped: np.ndarray, other_ped: np.ndarray, radius: float):
 
 
 def slowingValue(speed: float):
-	return 0 if speed<1.1 else (1 if speed>1.6 else (1 - np.sqrt(1-((2*speed - 2.2)**2))))
+	return 0 if speed<0.95 else (1 if speed>1.45 else (1 - np.sqrt(1-((2*speed - 1.9)**2))))
 	# return 0 if speed<1.0 else (1 if speed>1.5 else (2*speed - 2))
 
 
 def speedingValue(speed: float):
-	return 1 if speed<0.4 else (0 if speed>0.9 else (1 - np.sqrt(1-((2*speed - 1.8)**2))))
+	return 1 if speed<0.55 else (0 if speed>1.05 else (1 - np.sqrt(1-((2*speed - 2.1)**2))))
 	# return 1 if speed<0.5 else (0 if speed>1.0 else (-2*speed + 2))
 
 
@@ -192,10 +192,10 @@ def applyDesiredSpeedForce(direction: np.ndarray, turns_right: bool, is_too_fast
 	STEP_WIDTH = 0.4
 	speed_val = np.linalg.norm(direction)
 	direction /= speed_val
-	if is_too_fast:
-		force_val *= slowingValue(speed_val/desired_speed)
-	else:
+	if not is_too_fast:
 		force_val *= speedingValue(speed_val/desired_speed)
+	else:
+		force_val *= slowingValue(speed_val/desired_speed)
 
 	if force_val == 0:
 		return [0, 0]
