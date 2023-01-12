@@ -1,6 +1,5 @@
 # ssd-stok-narciarski
 
-102 metry
 
 example.toml jest niepotrzebny i trzeba go usunąć - program sprawdza czy ten plik istnieje, trzeba to też usunąć bo inaczej się nie odpali  
 default.toml też do wyrzucenia  
