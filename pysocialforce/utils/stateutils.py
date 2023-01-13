@@ -164,7 +164,7 @@ def ellipse_obstacle_force(speed: np.ndarray, obstacle: np.ndarray, radius: floa
     c = np.sqrt(a**2 - b**2)
     min = a - c
     max = 2*a - min
-    norm_value = 1 - ((r-min) / (max-min))  # <0, 1>, 0: edge, 1: focal point
+    norm_value = 1 - ((d-min) / (max-min))  # <0, 1>, 0: edge, 1: focal point
 
     return obstacle / d * -np.exp(-4 * norm_value)
 
